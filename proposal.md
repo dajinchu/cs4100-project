@@ -1,3 +1,6 @@
+Da-Jin Chu
+Matthew Gries
+
 # Elevator Pitch
 
 Train a single Q-learner to play Othello.
