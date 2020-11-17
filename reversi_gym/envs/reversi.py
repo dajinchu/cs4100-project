@@ -118,7 +118,8 @@ class ReversiEnv(gym.Env):
             return self.state, -1, True, {'state': self.state}
         elif not ReversiEnv.valid_place(self.state, action, self.player_color):
             if self.illegal_place_mode == 'raise':
-                raise
+                self.render()
+                raise error.Error('illegal move placing on tile {}'.format(action))
             elif self.illegal_place_mode == 'lose':
                 # Automatic loss on illegal place
                 self.done = True

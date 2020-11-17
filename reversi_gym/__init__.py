@@ -7,7 +7,7 @@ register(
         'player_color': 'black',
         'opponent': 'random',
         'observation_type': 'numpy3c',
-        'illegal_place_mode': 'lose',
+        'illegal_place_mode': 'raise',
         'board_size': 8,
     }
 )
