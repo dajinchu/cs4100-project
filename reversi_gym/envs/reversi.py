@@ -17,7 +17,9 @@ def make_random_policy(np_random):
         possible_places = ReversiEnv.get_possible_actions(state, player_color)
         # No places left
         if len(possible_places) == 0:
-            return d**2 + 1
+            print("Warning: no possible_places left, not sure what to do!")
+            return 0
+            # return d**2 + 1
         a = np_random.randint(len(possible_places))
         return possible_places[a]
     return random_policy
