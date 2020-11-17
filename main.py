@@ -17,6 +17,7 @@ if __name__ == "__main__":
     # Given a state and action, return the evaluation of it using a NN
     def Q(state, action):
       # TODO
+        pass
 
     for i_episode in range(ITERATIONS):
         observation = env.reset()
