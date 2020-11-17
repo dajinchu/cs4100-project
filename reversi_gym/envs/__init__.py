@@ -1,1 +1,1 @@
-from gym.envs.reversi.reversi import ReversiEnv
+from reversi_gym.envs.reversi import ReversiEnv
