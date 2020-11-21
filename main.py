@@ -31,6 +31,7 @@ if __name__ == "__main__":
 
     for i_episode in range(ITERATIONS):
         Qprev = False
+        reward = 0
         observation = env.reset()
         for t in range(MAX_MOVES):
             # env.render()
@@ -40,39 +41,31 @@ if __name__ == "__main__":
                 action = env.board_size**2 + 1
                 observation, reward, done, info = env.step(action)
             else:
+                evaluation = Q(observation)
+
+                # Make a mask of valid moves
+                mask = torch.zeros(64)
+                mask.scatter_(0, torch.LongTensor(enables), 1.)
+
+                max_q = torch.max(evaluation * mask)
+                Qnew = reward + DISCOUNT_FACTOR * max_q
 
                 # Adjust the q value
                 if Qprev:
-                    evaluation = Q(observation)
-                    mask = torch.zeros(64)
-                    mask.scatter_(0, torch.LongTensor(env.possible_actions), 1.)
-
-                    Qnew = reward + DISCOUNT_FACTOR * torch.max(evaluation * mask)
                     # Adjust NN to set Q(observation, a) = Qnew
                     optimizer.zero_grad()   # zero the gradient buffers
                     loss = criterion(Qprev, Qnew)
+                    print(Qprev, Qnew)
                     loss.backward()
                     optimizer.step() 
                     
-                    # print('qnn.fc1.grad after backward')
-                    # print(qnn.fc1.bias.grad)
-
-
-
                 should_explore = random.uniform(0,1) < EXPLORE_PROB
-                evaluation = Q(observation) # TODO we run Q twice per loop
-                if should_explore:
+                if should_explore or max_q == 0:
+                    # Random if exploring or if every action has evaluation 0
                     action = random.choice(enables)
                 else:
-                    # Make a mask of valid moves
-                    mask = torch.zeros(64)
-                    mask.scatter_(0, torch.LongTensor(enables), 1.)
-                    # Random if everything is 0
-                    if torch.max(evaluation * mask) == 0:
-                        action = random.choice(enables)
-                    else:
-                        action = torch.argmax(evaluation * mask)
-                Qprev = evaluation[action]
+                    action = torch.argmax(evaluation * mask)
+                Qprev = evaluation.detach()[action]
                 observation, reward, done, info = env.step(action)
 
             if done:
