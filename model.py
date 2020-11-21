@@ -15,8 +15,10 @@ class QNetwork(nn.Module):
         super().__init__()
 
         # 8 x 8 states, 3 one-hot encoded vectors
-        self.fc1 = nn.Linear(192, 128)
-        self.fc2 = nn.Linear(128, 64)
+        self.conv1 = nn.Conv2d(3, 3, 3, padding=1)
+        self.conv2 = nn.Conv2d(3, 3, 3, padding=1)
+        self.fc1 = nn.Linear(192, 64)
+        # self.fc2 = nn.Linear(128, 64)
 
     def forward(self, x):
         """
@@ -26,9 +28,12 @@ class QNetwork(nn.Module):
             x (torch.Tensor): tensor of shape (N, 8, 8, 3) where N is the batch size
         """
 
+        x = torch.unsqueeze(x, 0)
+        x = self.conv1(x)
+        x = self.conv2(x)
         x = torch.flatten(x)
         x = self.fc1(x)
         x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
+        # x = self.fc2(x)
+        # x = F.relu(x)
         return x
