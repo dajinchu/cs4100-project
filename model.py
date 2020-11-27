@@ -15,10 +15,10 @@ class QNetwork(nn.Module):
         super().__init__()
 
         # 8 x 8 states, 3 one-hot encoded vectors
-        self.conv1 = nn.Conv2d(3, 3, 3, padding=1)
-        self.conv2 = nn.Conv2d(3, 3, 3, padding=1)
-        self.fc1 = nn.Linear(192, 64)
-        # self.fc2 = nn.Linear(128, 64)
+        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)
+        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)
+        self.conv3 = nn.Conv2d(128, 2, 3, padding=1)
+        self.fc1 = nn.Linear(128, 64)
 
     def forward(self, x):
         """
@@ -30,7 +30,11 @@ class QNetwork(nn.Module):
 
         x = torch.unsqueeze(x, 0)
         x = self.conv1(x)
+        x = F.relu(x)
         x = self.conv2(x)
+        x = F.relu(x)
+        x = self.conv3(x)
+        x = F.relu(x)
         x = torch.flatten(x)
         x = self.fc1(x)
         x = F.relu(x)
