@@ -9,6 +9,7 @@ import sys
 import gym
 from gym import spaces
 import numpy as np
+import reversi_gym.envs.minimax
 from gym import error
 from gym.utils import seeding
 
@@ -78,6 +79,8 @@ class ReversiEnv(gym.Env):
         if isinstance(self.opponent, str):
             if self.opponent == 'random':
                 self.opponent_policy = make_random_policy(self.np_random)
+            elif self.oppponent == 'minimax':
+                self.opponent_policy = reversi_gym.envs.minimax.minimax
             else:
                 raise error.Error('Unrecognized opponent policy {}'.format(self.opponent))
         else:
@@ -140,7 +143,7 @@ class ReversiEnv(gym.Env):
                 return self.state, 1, True, {'state': self.state}
             elif not ReversiEnv.valid_place(self.state, a, 1 - self.player_color):
                 if self.illegal_place_mode == 'raise':
-                    raise
+                    raise error.Error("ohno")
                 elif self.illegal_place_mode == 'lose':
                     # Automatic loss on illegal place
                     self.done = True
