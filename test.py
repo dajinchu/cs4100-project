@@ -4,6 +4,10 @@ import gym
 import random
 import torch
 
+import sys
+
+torch.manual_seed(123456)
+
 def generate_states_at_depth(env, d):
     """
     Generator that yields all possible states of Othello at depth d
@@ -59,8 +63,8 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("please provide an id for the saved weights")
         exit()
-   qnn = QNetwork()
-   qnn.load_state_dict(torch.load("./model_{}.pt".format(sys.argv[1])))
-   qnn.eval()
-   qnn.double()
-   test(qnn)
+    qnn = QNetwork()
+    qnn.load_state_dict(torch.load("./trained/model_{}.pt".format(sys.argv[1])))
+    qnn.eval()
+    qnn.double()
+    test(qnn)

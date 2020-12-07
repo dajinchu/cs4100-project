@@ -8,9 +8,11 @@ from model import QNetwork
 
 import sys
 
-DISCOUNT_FACTOR = 0.8
+torch.manual_seed(1234567)
+
+DISCOUNT_FACTOR = 0.08
 EXPLORE_PROB = 0.2
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.1
 ITERATIONS = 1000
 MAX_MOVES = 100
 
@@ -85,4 +87,4 @@ if __name__ == "__main__":
         exit()
     print(reversi_gym.__file__)
     model = train()
-    torch.save(model.state_dict(), "./model_{}.pt".format(sys.argv[1]))
+    torch.save(model.state_dict(), "./trained/model_{}.pt".format(sys.argv[1]))
