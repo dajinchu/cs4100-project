@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 import torch.optim as optim
-from model import QNetwork
+from model import QNetworkFC
 
 import sys
 
@@ -22,7 +22,7 @@ def train():
     env.reset()
     SKIP_ACTION = env.board_size**2 + 1
 
-    qnn = QNetwork()
+    qnn = QNetworkFC()
     qnn.double()
     optimizer = optim.SGD(qnn.parameters(), lr=LEARNING_RATE)
     criterion = torch.nn.MSELoss()
