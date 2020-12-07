@@ -3,6 +3,7 @@ import gym
 import random
 import numpy as np
 import torch
+import math
 import torch.optim as optim
 from model import QNetworkFC, QNetwork
 
@@ -11,7 +12,8 @@ import sys
 torch.manual_seed(123456)
 
 DISCOUNT_FACTOR = 0.8
-EXPLORE_PROB = 0.2
+INIT_EXPLORE_PROB = 0.9
+END_EXPLORE_PROB = 0.05
 INIT_LEARNING_RATE = 0.2
 END_LEARNING_RATE = 0.02
 ITERATIONS = 1000
@@ -22,6 +24,10 @@ def valid_mask(enables):
     mask = torch.zeros(64)
     mask.scatter_(0, torch.LongTensor(enables), 1.)
     return mask
+
+# linear interpolation from start to end using step value [0,1]
+def interpolate(start,end,step):
+    return start + (end-start) * step
 
 def train():
     env = gym.make('Reversi8x8-v0')
@@ -39,13 +45,12 @@ def train():
 
     wins, ties = 0, 0
     for i_episode in range(ITERATIONS):
-        if i_episode % (ITERATIONS/10) == 0:
-            step = i_episode / ITERATIONS
-            new_lr = INIT_LEARNING_RATE - step * (INIT_LEARNING_RATE-END_LEARNING_RATE)
-            print("LEARNING RATE", new_lr)
-            optimizer.param_groups[0]['lr'] = new_lr
-        previous_eval = None
-        previous_action = None
+        step = i_episode / ITERATIONS
+        # interpolate learning rate
+        new_lr = interpolate(INIT_LEARNING_RATE, END_LEARNING_RATE, step)
+        optimizer.param_groups[0]['lr'] = new_lr
+        #interpolate explore probability
+        EXPLORE_PROB = interpolate(INIT_EXPLORE_PROB, END_EXPLORE_PROB, step)
         observation = env.reset()
         for t in range(MAX_MOVES):
             # env.render()
@@ -73,6 +78,7 @@ def train():
                 # Adjust NN to set Q(observation, a) = Qnew
                 if(done):
                     Qnew = torch.tensor((reward+1)/2) # scale range [-1,1] to [0,1]
+                    print("LOSS", loss.item())
                 else:
                     max_q = torch.max(Q(observation) * mask)
                     Qnew = DISCOUNT_FACTOR * max_q
@@ -81,19 +87,7 @@ def train():
                 optimizer.zero_grad()   # zero the gradient buffers
                 loss = criterion(previous_eval, new_eval)
                 loss.backward()
-                # print(reward, max_q, "Qnew", Qnew.detach().numpy(), "LOSS", loss.item())
                 optimizer.step()
-
-                # if done:
-                #     print("DONE")
-                #     Qnew = torch.tensor((reward+1)/2)
-                #     new_eval = previous_eval.detach()
-                #     new_eval[previous_action] = Qnew
-                #     # print(Qnew, Qprev, previous_eval)
-                #     optimizer.zero_grad()   # zero the gradient buffers
-                #     loss = criterion(previous_eval, new_eval)
-                #     loss.backward()
-                #     optimizer.step()
 
             if done:
                 print("Episode #{}/{} finished after {} timesteps".format(i_episode, ITERATIONS, t+1))
