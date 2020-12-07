@@ -4,15 +4,15 @@ import random
 import numpy as np
 import torch
 import torch.optim as optim
-from model import QNetwork
+from model import QNetworkFC
 
 import sys
 
 torch.manual_seed(1234567)
 
-DISCOUNT_FACTOR = 0.08
+DISCOUNT_FACTOR = 0.8
 EXPLORE_PROB = 0.2
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.001
 ITERATIONS = 1000
 MAX_MOVES = 100
 
@@ -22,7 +22,7 @@ def train():
     env.reset()
     SKIP_ACTION = env.board_size**2 + 1
 
-    qnn = QNetwork()
+    qnn = QNetworkFC()
     qnn.double()
     optimizer = optim.SGD(qnn.parameters(), lr=LEARNING_RATE)
     criterion = torch.nn.MSELoss()
