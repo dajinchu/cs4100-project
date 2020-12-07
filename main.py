@@ -8,11 +8,11 @@ from model import QNetwork
 
 import sys
 
-torch.manual_seed(1234567)
+torch.manual_seed(0)
 
-DISCOUNT_FACTOR = 0.08
+DISCOUNT_FACTOR = 0.8
 EXPLORE_PROB = 0.2
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.01
 ITERATIONS = 1000
 MAX_MOVES = 100
 
@@ -33,7 +33,8 @@ def train():
 
     wins, ties = 0, 0
     for i_episode in range(ITERATIONS):
-        Qprev = False
+        previous_eval = None
+        previous_action = None
         observation = env.reset()
         for t in range(MAX_MOVES):
             # env.render()
@@ -51,11 +52,13 @@ def train():
 
                 max_q = torch.max(evaluation * mask)
                 # Adjust the q value
-                if Qprev:
+                if previous_eval is not None:
                     # Adjust NN to set Q(observation, a) = Qnew
                     Qnew = reward + DISCOUNT_FACTOR * max_q
+                    new_eval = previous_eval * mask
+                    new_eval[previous_action] = Qnew
                     optimizer.zero_grad()   # zero the gradient buffers
-                    loss = criterion(Qprev, Qnew)
+                    loss = criterion(previous_eval, new_eval)
                     loss.backward()
                     optimizer.step()
 
@@ -65,7 +68,8 @@ def train():
                     action = random.choice(enables)
                 else:
                     action = torch.argmax(evaluation * mask)
-                Qprev = evaluation.detach()[action]
+                previous_eval = evaluation.detach()
+                previous_action = action
                 observation, reward, done, info = env.step(action)
 
             if done:
