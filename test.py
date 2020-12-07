@@ -56,8 +56,11 @@ def test_1_game(env, observation, qnn):
                 return reward
 
 if __name__ == "__main__":
-  qnn = QNetwork()
-  qnn.load_state_dict(torch.load("./model.pt"))
-  qnn.eval()
-  qnn.double()
-  test(qnn)
+    if len(sys.argv) != 2:
+        print("please provide an id for the saved weights")
+        exit()
+   qnn = QNetwork()
+   qnn.load_state_dict(torch.load("./model_{}.pt".format(sys.argv[1])))
+   qnn.eval()
+   qnn.double()
+   test(qnn)

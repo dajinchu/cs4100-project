@@ -6,9 +6,11 @@ import torch
 import torch.optim as optim
 from model import QNetwork
 
+import sys
+
 DISCOUNT_FACTOR = 0.8
 EXPLORE_PROB = 0.2
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 ITERATIONS = 1000
 MAX_MOVES = 100
 
@@ -20,7 +22,7 @@ def train():
 
     qnn = QNetwork()
     qnn.double()
-    optimizer = optim.SGD(qnn.parameters(), lr=0.01)
+    optimizer = optim.SGD(qnn.parameters(), lr=LEARNING_RATE)
     criterion = torch.nn.MSELoss()
     # Given a state, return the evaluation of all actions from it
 
@@ -78,6 +80,9 @@ def train():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("please provide an id for the saved weights")
+        exit()
     print(reversi_gym.__file__)
     model = train()
-    torch.save(model.state_dict(), "./model.pt")
+    torch.save(model.state_dict(), "./model_{}.pt".format(sys.argv[1]))
