@@ -1,5 +1,5 @@
 from reversi_gym.envs.reversi import ReversiEnv
-from model import QNetwork
+from model import QNetwork, QNetworkFC
 import gym
 import random
 import torch
@@ -52,6 +52,7 @@ def test_1_game(env, observation, qnn):
             max_q = torch.max(evaluation * mask)
             if torch.isnan(max_q) or max_q == 0:
                 action = random.choice(enables)
+                print("rand")
             else:
                 action = torch.argmax(evaluation * mask)
             observation, reward, done, info = env.step(action)
