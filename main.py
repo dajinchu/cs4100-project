@@ -4,6 +4,8 @@ import random
 import numpy as np
 import torch
 import math
+from collections import deque
+from statistics import mean
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from model import QNetworkFC, QNetwork
@@ -29,6 +31,18 @@ def valid_mask(enables):
 # linear interpolation from start to end using step value [0,1]
 def interpolate(start,end,step):
     return start + (end-start) * step
+
+# INsert new_sample into moving average of window size
+avgs = {}
+def moving_avg(key,size,new_sample):
+    if key not in avgs:
+        avgs[key] = deque([new_sample])
+    else:
+        avgs[key].appendleft(new_sample)
+        if len(avgs[key]) == size:
+            avgs[key].pop()
+    return mean(avgs[key])
+  
 
 def train(name, writer=None):
     env = gym.make('Reversi8x8-v0')
@@ -102,10 +116,8 @@ def train(name, writer=None):
                 if i_episode % 10 ==0:
                     print("{}-{}-{} record. Win ratio: {}".format(wins, 1+i_episode-wins-ties, ties, wins/(1+i_episode-ties)))
                 if writer:
-                    print("WRITING LOSS TO GRAPH!!!!!!! {}".format(i_episode))
-                    print(sum(losses)/len(losses))
-                    #input()
-                    writer.add_scalar("{}/avg_loss_episode/train".format(name), sum(losses)/len(losses), i_episode)
+                    writer.add_scalar("{}/win_moving_avg/train".format(name), moving_avg("wins", 20, reward), i_episode)
+                    writer.add_scalar("{}/avg_loss_episode/train".format(name), mean(losses), i_episode)
                 # clear loss for next episode
                 losses = []
                 break
