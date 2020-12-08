@@ -117,6 +117,7 @@ def train(name, writer=None):
                     print("{}-{}-{} record. Win ratio: {}".format(wins, 1+i_episode-wins-ties, ties, wins/(1+i_episode-ties)))
                 if writer:
                     writer.add_scalar("{}/win_moving_avg/train".format(name), moving_avg("wins", 20, reward), i_episode)
+                    writer.add_scalar("{}/score/train".format(name), black_score, i_episode)
                     writer.add_scalar("{}/avg_loss_episode/train".format(name), mean(losses), i_episode)
                 # clear loss for next episode
                 losses = []
