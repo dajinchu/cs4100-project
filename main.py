@@ -19,7 +19,7 @@ INIT_EXPLORE_PROB = 0.9
 END_EXPLORE_PROB = 0.05
 INIT_LEARNING_RATE = 0.2
 END_LEARNING_RATE = 0.02
-ITERATIONS = 1000
+ITERATIONS = 20000
 MAX_MOVES = 100
 
 def valid_mask(enables):
@@ -100,7 +100,7 @@ def train(name, writer=None):
                 new_eval = previous_eval.detach().clone()
                 new_eval[previous_action] = Qnew
                 optimizer.zero_grad()   # zero the gradient buffers
-                loss = criterion(previous_eval, new_eval)
+                loss = criterion(previous_eval[previous_action], new_eval[previous_action])
                 losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
