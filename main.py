@@ -49,7 +49,7 @@ def train(name, writer=None):
     env.reset()
     SKIP_ACTION = env.board_size**2 + 1
 
-    qnn = QNetworkFC()
+    qnn = QNetwork()
     qnn.double()
     optimizer = optim.SGD(qnn.parameters(), lr=INIT_LEARNING_RATE)
     criterion = torch.nn.MSELoss()
@@ -87,20 +87,16 @@ def train(name, writer=None):
                     action = random.choice(enables)
                 else:
                     action = torch.argmax(evaluation * mask)
-                previous_eval = evaluation.clone()
-                previous_action = action
                 observation, reward, done, info = env.step(action)
 
                 # Adjust NN to set Q(observation, a) = Qnew
                 if(done):
-                    Qnew = torch.tensor((reward+1)/2) # scale range [-1,1] to [0,1]
+                    Qnew = torch.tensor((reward+1)/2, dtype=torch.double) # scale range [-1,1] to [0,1]
                 else:
                     max_q = torch.max(Q(observation) * mask)
                     Qnew = DISCOUNT_FACTOR * max_q
-                new_eval = previous_eval.detach().clone()
-                new_eval[previous_action] = Qnew
                 optimizer.zero_grad()   # zero the gradient buffers
-                loss = criterion(previous_eval[previous_action], new_eval[previous_action])
+                loss = criterion(evaluation[action], Qnew)
                 losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
