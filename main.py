@@ -17,7 +17,7 @@ INIT_EXPLORE_PROB = 0.9
 END_EXPLORE_PROB = 0.05
 INIT_LEARNING_RATE = 0.2
 END_LEARNING_RATE = 0.02
-ITERATIONS = 1000
+ITERATIONS = 20000
 MAX_MOVES = 100
 
 def valid_mask(enables):
@@ -86,7 +86,7 @@ def train(name, writer=None):
                 new_eval = previous_eval.detach().clone()
                 new_eval[previous_action] = Qnew
                 optimizer.zero_grad()   # zero the gradient buffers
-                loss = criterion(previous_eval, new_eval)
+                loss = criterion(previous_eval[previous_action], new_eval[previous_action])
                 losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
@@ -102,8 +102,8 @@ def train(name, writer=None):
                 if i_episode % 10 ==0:
                     print("{}-{}-{} record. Win ratio: {}".format(wins, 1+i_episode-wins-ties, ties, wins/(1+i_episode-ties)))
                 if writer:
-                    print("WRITING LOSS TO GRAPH!!!!!!! {}".format(i_episode))
-                    print(sum(losses)/len(losses))
+                    #print("WRITING LOSS TO GRAPH!!!!!!! {}".format(i_episode))
+                    #print(sum(losses)/len(losses))
                     #input()
                     writer.add_scalar("{}/avg_loss_episode/train".format(name), sum(losses)/len(losses), i_episode)
                 # clear loss for next episode
