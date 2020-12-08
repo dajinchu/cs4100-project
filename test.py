@@ -54,6 +54,7 @@ def test_1_game(env, observation, qnn):
             if torch.isnan(max_q) or max_q == 0:
                 action = random.choice(enables)
                 print("rand")
+                input()
             else:
                 action = torch.argmax(evaluation * mask)
             observation, reward, done, info = env.step(action)

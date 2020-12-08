@@ -37,9 +37,10 @@ class QNetwork(nn.Module):
         x = F.relu(x)
         x = torch.flatten(x)
         x = self.fc1(x)
-        x = F.relu(x)
+        #x = F.relu(x)
         # x = self.fc2(x)
         # x = F.relu(x)
+        x = F.sigmoid(x)
         return x
 
 class QNetworkFC(nn.Module):
@@ -70,5 +71,5 @@ class QNetworkFC(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
-        x = F.relu(x)
+        x = F.sigmoid(x)
         return x

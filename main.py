@@ -35,7 +35,7 @@ def train(name, writer=None):
     env.reset()
     SKIP_ACTION = env.board_size**2 + 1
 
-    qnn = QNetwork()
+    qnn = QNetworkFC()
     qnn.double()
     optimizer = optim.SGD(qnn.parameters(), lr=INIT_LEARNING_RATE)
     criterion = torch.nn.MSELoss()
@@ -53,6 +53,7 @@ def train(name, writer=None):
         #interpolate explore probability
         EXPLORE_PROB = interpolate(INIT_EXPLORE_PROB, END_EXPLORE_PROB, step)
         observation = env.reset()
+        losses = []
         for t in range(MAX_MOVES):
             # env.render()
             enables = env.possible_actions
@@ -86,9 +87,7 @@ def train(name, writer=None):
                 new_eval[previous_action] = Qnew
                 optimizer.zero_grad()   # zero the gradient buffers
                 loss = criterion(previous_eval, new_eval)
-                print("LOSS", loss.item())
-                if writer:
-                    writer.add_scalar("{}/loss/train".format(name), loss.item(), i_episode)
+                losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
 
@@ -102,7 +101,15 @@ def train(name, writer=None):
                     ties += 1
                 if i_episode % 10 ==0:
                     print("{}-{}-{} record. Win ratio: {}".format(wins, 1+i_episode-wins-ties, ties, wins/(1+i_episode-ties)))
+                if writer:
+                    print("WRITING LOSS TO GRAPH!!!!!!! {}".format(i_episode))
+                    print(sum(losses)/len(losses))
+                    #input()
+                    writer.add_scalar("{}/avg_loss_episode/train".format(name), sum(losses)/len(losses), i_episode)
+                # clear loss for next episode
+                losses = []
                 break
+
     print("{}-{}-{} record. Win ratio: {}".format(wins, ITERATIONS-wins-ties, ties, wins/(ITERATIONS-ties)))
     return qnn
 
