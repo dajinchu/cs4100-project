@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import math
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
 from model import QNetworkFC, QNetwork
 
 import sys
@@ -29,7 +30,7 @@ def valid_mask(enables):
 def interpolate(start,end,step):
     return start + (end-start) * step
 
-def train():
+def train(name, writer=None):
     env = gym.make('Reversi8x8-v0')
     env.reset()
     SKIP_ACTION = env.board_size**2 + 1
@@ -78,7 +79,6 @@ def train():
                 # Adjust NN to set Q(observation, a) = Qnew
                 if(done):
                     Qnew = torch.tensor((reward+1)/2) # scale range [-1,1] to [0,1]
-                    print("LOSS", loss.item())
                 else:
                     max_q = torch.max(Q(observation) * mask)
                     Qnew = DISCOUNT_FACTOR * max_q
@@ -86,6 +86,9 @@ def train():
                 new_eval[previous_action] = Qnew
                 optimizer.zero_grad()   # zero the gradient buffers
                 loss = criterion(previous_eval, new_eval)
+                print("LOSS", loss.item())
+                if writer:
+                    writer.add_scalar("{}/loss/train".format(name), loss.item(), i_episode)
                 loss.backward()
                 optimizer.step()
 
@@ -109,5 +112,9 @@ if __name__ == "__main__":
         print("please provide an id for the saved weights")
         exit()
     print(reversi_gym.__file__)
-    model = train()
-    torch.save(model.state_dict(), "./trained/model_{}.pt".format(sys.argv[1]))
+    writer = SummaryWriter()
+    name = "model_{}".format(sys.argv[1])
+    model = train(name, writer)
+    writer.flush()
+    writer.close()
+    torch.save(model.state_dict(), "./trained/{}.pt".format(name))

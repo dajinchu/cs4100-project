@@ -3,6 +3,7 @@ from model import QNetwork, QNetworkFC
 import gym
 import random
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 import sys
 
@@ -14,7 +15,7 @@ def generate_states_at_depth(env, d):
     """
     ReversiEnv.make_place(env.state, a, ReversiEnv.BLACK)
 
-def test(qnn):
+def test(qnn, name, writer=None):
     env = gym.make('Reversi8x8-v0')
     wins, ties = 0, 0
     for i in range(1000):
@@ -64,8 +65,12 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("please provide an id for the saved weights")
         exit()
+    writer = SummaryWriter()
     qnn = QNetwork()
-    qnn.load_state_dict(torch.load("./trained/model_{}.pt".format(sys.argv[1])))
+    name = "model_{}".format(sys.argv[1])
+    qnn.load_state_dict(torch.load("./trained/{}.pt".format(name)))
     qnn.eval()
     qnn.double()
-    test(qnn)
+    test(qnn, name, writer)
+    writer.flush()
+    writer.close()
