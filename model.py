@@ -30,16 +30,13 @@ class QNetwork(nn.Module):
 
         x = torch.unsqueeze(x, 0)
         x = self.conv1(x)
-        x = F.relu(x)
+        x = F.sigmoid(x)
         x = self.conv2(x)
-        x = F.relu(x)
+        x = F.sigmoid(x)
         x = self.conv3(x)
-        x = F.relu(x)
+        x = F.sigmoid(x)
         x = torch.flatten(x)
         x = self.fc1(x)
-        #x = F.relu(x)
-        # x = self.fc2(x)
-        # x = F.relu(x)
         x = F.sigmoid(x)
         return x
 
@@ -69,7 +66,7 @@ class QNetworkFC(nn.Module):
 
         x = torch.flatten(x)
         x = self.fc1(x)
-        x = F.relu(x)
+        x = F.sigmoid(x)
         x = self.fc2(x)
         x = F.sigmoid(x)
         return x

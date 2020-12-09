@@ -18,14 +18,21 @@ def generate_states_at_depth(env, d):
 def test(qnn, name, writer=None):
     env = gym.make('Reversi8x8-v0')
     wins, ties = 0, 0
-    for i in range(1000):
+    for i in range(2500):
         init_obs = env.reset()
         r = test_1_game(env, init_obs, qnn) 
         if r == 1:
           wins += 1
         if r == None:
           ties += 1
-        print("{}-{}-{} record. Win ratio: {}".format(wins, i+1-wins-ties, ties, wins/(i+1-ties)))
+        try:
+            print("{}-{}-{} record. Win ratio: {}".format(wins, i+1-wins-ties, ties, wins/(i+1-ties)))
+            if writer:
+                writer.add_scalar("{}/win_ratio/test".format(name), wins/(i+1-ties), i)
+        except ZeroDivisionError:
+            print("{}-{}-{} record. Win ratio: {}".format(wins, i+1-wins-ties, ties, 0.0))
+            if writer:
+                writer.add_scalar("{}/win_ratio/test".format(name), 0.0, i)
 
 
 def test_1_game(env, observation, qnn):
@@ -49,12 +56,11 @@ def test_1_game(env, observation, qnn):
             # Make a mask of valid moves
             mask = torch.zeros(64)
             mask.scatter_(0, torch.LongTensor(enables), 1.)
-
+            # select the action with the highest Q-value
             max_q = torch.max(evaluation * mask)
             if torch.isnan(max_q) or max_q == 0:
                 action = random.choice(enables)
-                print("rand")
-                input()
+                #print("rand")
             else:
                 action = torch.argmax(evaluation * mask)
             observation, reward, done, info = env.step(action)
@@ -67,7 +73,7 @@ if __name__ == "__main__":
         print("please provide an id for the saved weights")
         exit()
     writer = SummaryWriter()
-    qnn = QNetwork()
+    qnn = QNetworkFC()
     name = "model_{}".format(sys.argv[1])
     qnn.load_state_dict(torch.load("./trained/{}.pt".format(name)))
     qnn.eval()
