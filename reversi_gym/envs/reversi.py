@@ -219,13 +219,14 @@ class ReversiEnv(gym.Env):
     def from_rust_board(board):
         # convert from 8x8 array of 0,1,2 (0 is empty, player 1, player 2) back to 3x8x8 one hot
         a = ((board-1)%3)
-        return (np.arange(a.max()+1) == a[...,None]).astype(int).transpose((2,0,1))
+        return (np.arange(3) == a[...,None]).astype(int).transpose((2,0,1))
 
     @staticmethod
     def get_possible_actions(board, player_color):
         rs_board = ReversiEnv.to_rust_board(board)
         rs_color = player_color+1
-        return rust_reversi.get_possible_actions(rs_color, rs_board)
+        actions = rust_reversi.get_possible_actions(rs_color, rs_board)
+        return actions
 
     @staticmethod
     def valid_reverse_opponent(board, coords, player_color):
@@ -274,13 +275,12 @@ class ReversiEnv(gym.Env):
     def make_place(board, action, player_color):
         coords = ReversiEnv.action_to_coordinate(board, action)
 
-        pos_x = coords[0]
-        pos_y = coords[1]
+        pos_y = coords[0]
+        pos_x = coords[1]
 
-        #TODO: Have Rust do the mutation?
+        #TODO: Have Rust do the mutation? should this func mutate and return? kinda odd
         rust_board = rust_reversi.place_tile(pos_x, pos_y, player_color+1, ReversiEnv.to_rust_board(board))
         new_board = ReversiEnv.from_rust_board(np.array(rust_board))
-        print(new_board, board, coords)
         board[new_board>-9] = new_board[new_board>-9]
         return board
 

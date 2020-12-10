@@ -10,7 +10,7 @@ pub fn get_possible_actions(_stone: usize, _board: [[usize; 8]; 8]) -> Vec<usize
 
     for y in 0..8 {
         for x in 0..8 {
-            if _board[y][x] == 0 && _board != place_tile(x, y, _stone, _board) {
+            if _board[y][x] == 0 && _board != flip(x, y, _stone, _board) {
                 positions.push(y*8+x);
             }
         }
@@ -22,8 +22,15 @@ pub fn get_possible_actions(_stone: usize, _board: [[usize; 8]; 8]) -> Vec<usize
     positions
 }
 
-/// Place tile of given color at [x,y] on board. Returning new board
-pub fn place_tile(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) -> [[usize; 8]; 8] {
+pub fn place_tile(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) -> [[usize; 8]; 8] { 
+    let mut new_board = flip(_x, _y, _color, _board);
+    new_board[_y][_x] = _color;
+    // println!("new board:\n {:?}\nboard:\n {:?}\nplace(y,x): {}, {}",new_board, _board,_y,_x);
+    new_board
+}
+
+/// Flip tiles if placing tile of given color at [x,y] on board. Returning new board
+fn flip(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) -> [[usize; 8]; 8] {
     let opponent_color = if _color == 1 { 2 } else { 1 };
     let dx: [i32; 8] = [0, -1, -1, -1, 0, 1, 1, 1];
     let dy: [i32; 8] = [1, 1, 0, -1, -1, -1, 0, 1];
@@ -70,8 +77,6 @@ pub fn place_tile(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) 
             }
         }
     }
-    new_board[_y][_x] = _color;
-
     new_board
 }
 
