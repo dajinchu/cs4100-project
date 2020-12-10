@@ -5,12 +5,12 @@ const SKIP_ACTION: usize = 65;
 
 
 /// Get all possible places the given color can go
-pub fn get_possible_actions(_stone: usize, _board: [[usize; 8]; 8]) -> Vec<usize> {
+pub fn get_possible_actions(_color: usize, _board: [[usize; 8]; 8]) -> Vec<usize> {
     let mut positions: Vec<usize> = Vec::with_capacity(64);
 
     for y in 0..8 {
         for x in 0..8 {
-            if _board[y][x] == 0 && _board != flip(x, y, _stone, _board) {
+            if _board[y][x] == 0 && is_valid(x,y,_color,_board) {
                 positions.push(y*8+x);
             }
         }
@@ -22,6 +22,12 @@ pub fn get_possible_actions(_stone: usize, _board: [[usize; 8]; 8]) -> Vec<usize
     positions
 }
 
+/// Is it valid to place at [y,x] as given color?
+pub fn is_valid(_x: usize, _y: usize, _color: usize, _board: [[usize; 8];8]) -> bool {
+    _board != flip(_x,_y,_color,_board)
+}
+
+/// Place and tile of given color at [y,x] on board and flip appropriately. Returning new board
 pub fn place_tile(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) -> [[usize; 8]; 8] { 
     let mut new_board = flip(_x, _y, _color, _board);
     new_board[_y][_x] = _color;
@@ -29,7 +35,7 @@ pub fn place_tile(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) 
     new_board
 }
 
-/// Flip tiles if placing tile of given color at [x,y] on board. Returning new board
+/// Flip tiles if placing tile of given color at [y,x] on board. Returning new board
 fn flip(_x: usize, _y: usize, _color: usize, _board: [[usize; 8]; 8]) -> [[usize; 8]; 8] {
     let opponent_color = if _color == 1 { 2 } else { 1 };
     let dx: [i32; 8] = [0, -1, -1, -1, 0, 1, 1, 1];

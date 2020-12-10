@@ -229,52 +229,16 @@ class ReversiEnv(gym.Env):
         return actions
 
     @staticmethod
-    def valid_reverse_opponent(board, coords, player_color):
-        '''
-        check whether there is any reversible places
-        '''
-        d = board.shape[-1]
-        opponent_color = 1 - player_color
-        pos_x = coords[0]
-        pos_y = coords[1]
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if(dx == 0 and dy == 0):
-                    continue
-                nx = pos_x + dx
-                ny = pos_y + dy
-                n = 0
-                if (nx not in range(d) or ny not in range(d)):
-                    continue
-                while(board[opponent_color, nx, ny] == 1):
-                    tmp_nx = nx + dx
-                    tmp_ny = ny + dy
-                    if (tmp_nx not in range(d) or tmp_ny not in range(d)):
-                        break
-                    n += 1
-                    nx += dx
-                    ny += dy
-                if(n > 0 and board[player_color, nx, ny] == 1):
-                    return True
-        return False
-
-    @staticmethod
     def valid_place(board, action, player_color):
         coords = ReversiEnv.action_to_coordinate(board, action)
-        # check whether there is any empty places
-        if board[2, coords[0], coords[1]] == 1:
-            # check whether there is any reversible places
-            if ReversiEnv.valid_reverse_opponent(board, coords, player_color):
-                return True
-            else:
-                return False
-        else:
-            return False
+        pos_y = coords[0]
+        pos_x = coords[1]
+
+        return rust_reversi.is_valid(pos_x, pos_y, player_color+1, ReversiEnv.to_rust_board(board))
 
     @staticmethod
     def make_place(board, action, player_color):
         coords = ReversiEnv.action_to_coordinate(board, action)
-
         pos_y = coords[0]
         pos_x = coords[1]
 
