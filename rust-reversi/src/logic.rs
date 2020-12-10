@@ -1,5 +1,3 @@
-use pyo3::prelude::*;
-
 /// Positions represented by flattened index. (y,x) = y*8+x
 const SKIP_ACTION: usize = 65;
 
@@ -99,4 +97,30 @@ pub fn scores(_board: [[usize; 8]; 8]) -> [usize; 2] {
     }
 
     stones
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    const basic_board: [[usize;8];8] = [[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0],
+[0,0,0,1,2,0,0,0],
+[0,0,0,2,1,0,0,0],
+[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0],
+    ];
+
+    #[test]
+    fn it_works() {
+        assert_eq!(true, is_valid(2,2,2,basic_board));
+    }
+
+    #[bench]
+    fn bench_add_two(b: &mut Bencher) {
+        b.iter(|| is_valid(2,3,1,basic_board));
+    }
 }
