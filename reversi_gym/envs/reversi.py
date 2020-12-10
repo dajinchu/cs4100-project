@@ -11,6 +11,7 @@ from gym import spaces
 import numpy as np
 from gym import error
 from gym.utils import seeding
+from . import rust_reversi
 
 def make_random_policy(np_random):
     def random_policy(state, player_color):
@@ -210,36 +211,21 @@ class ReversiEnv(gym.Env):
         return action == board_size ** 2 + 1
 
     @staticmethod
+    def to_rust_board(board):
+        # convert to 8x8 array of 0,1,2 (0 is empty, player 1, player 2)
+        return (board.transpose((1,2,0)).argmax(axis=2)+1)%3
+
+    @staticmethod
+    def from_rust_board(board):
+        # convert from 8x8 array of 0,1,2 (0 is empty, player 1, player 2) back to 3x8x8 one hot
+        a = ((board-1)%3)
+        return (np.arange(a.max()+1) == a[...,None]).astype(int).transpose((2,0,1))
+
+    @staticmethod
     def get_possible_actions(board, player_color):
-        actions=[]
-        d = board.shape[-1]
-        opponent_color = 1 - player_color
-        for pos_x in range(d):
-            for pos_y in range(d):
-                if (board[2, pos_x, pos_y]==0):
-                    continue
-                for dx in [-1, 0, 1]:
-                    for dy in [-1, 0, 1]:
-                        if(dx == 0 and dy == 0):
-                            continue
-                        nx = pos_x + dx
-                        ny = pos_y + dy
-                        n = 0
-                        if (nx not in range(d) or ny not in range(d)):
-                            continue
-                        while(board[opponent_color, nx, ny] == 1):
-                            tmp_nx = nx + dx
-                            tmp_ny = ny + dy
-                            if (tmp_nx not in range(d) or tmp_ny not in range(d)):
-                                break
-                            n += 1
-                            nx += dx
-                            ny += dy
-                        if(n > 0 and board[player_color, nx, ny] == 1):
-                            actions.append(pos_x * d + pos_y)
-        if len(actions)==0:
-            actions = [d**2 + 1]
-        return actions
+        rs_board = ReversiEnv.to_rust_board(board)
+        rs_color = player_color+1
+        return rust_reversi.get_possible_actions(rs_color, rs_board)
 
     @staticmethod
     def valid_reverse_opponent(board, coords, player_color):
@@ -288,41 +274,16 @@ class ReversiEnv(gym.Env):
     def make_place(board, action, player_color):
         coords = ReversiEnv.action_to_coordinate(board, action)
 
-        d = board.shape[-1]
-        opponent_color = 1 - player_color
         pos_x = coords[0]
         pos_y = coords[1]
 
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if(dx == 0 and dy == 0):
-                    continue
-                nx = pos_x + dx
-                ny = pos_y + dy
-                n = 0
-                if (nx not in range(d) or ny not in range(d)):
-                    continue
-                while(board[opponent_color, nx, ny] == 1):
-                    tmp_nx = nx + dx
-                    tmp_ny = ny + dy
-                    if (tmp_nx not in range(d) or tmp_ny not in range(d)):
-                        break
-                    n += 1
-                    nx += dx
-                    ny += dy
-                if(n > 0 and board[player_color, nx, ny] == 1):
-                    nx = pos_x + dx
-                    ny = pos_y + dy
-                    while(board[opponent_color, nx, ny] == 1):
-                        board[2, nx, ny] = 0
-                        board[player_color, nx, ny] = 1
-                        board[opponent_color, nx, ny] = 0
-                        nx += dx
-                        ny += dy
-                    board[2, pos_x, pos_y] = 0
-                    board[player_color, pos_x, pos_y] = 1
-                    board[opponent_color, pos_x, pos_y] = 0
+        #TODO: Have Rust do the mutation?
+        rust_board = rust_reversi.place_tile(pos_x, pos_y, player_color+1, ReversiEnv.to_rust_board(board))
+        new_board = ReversiEnv.from_rust_board(np.array(rust_board))
+        print(new_board, board, coords)
+        board[new_board>-9] = new_board[new_board>-9]
         return board
+
 
     @staticmethod
     def coordinate_to_action(board, coords):
