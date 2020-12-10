@@ -11,7 +11,7 @@ from gym import spaces
 import numpy as np
 from gym import error
 from gym.utils import seeding
-from . import rust_reversi
+import reversi_gym.envs.rust_reversi as rust_reversi
 
 def make_random_policy(np_random):
     def random_policy(state, player_color):
@@ -106,7 +106,7 @@ class ReversiEnv(gym.Env):
         # Let the opponent play if it's not the agent's turn
         if self.player_color != self.to_play:
             a = self.opponent_policy(self.state)
-            ReversiEnv.make_place(self.state, a, ReversiEnv.BLACK)
+            self.state = ReversiEnv.make_place(self.state, a, ReversiEnv.BLACK)
             self.to_play = ReversiEnv.WHITE
         return self.state
 
@@ -130,7 +130,7 @@ class ReversiEnv(gym.Env):
             else:
                 raise error.Error('Unsupported illegal place action: {}'.format(self.illegal_place_mode))
         else:
-            ReversiEnv.make_place(self.state, action, self.player_color)
+            self.state = ReversiEnv.make_place(self.state, action, self.player_color)
 
         # Opponent play
         a = self.opponent_policy(self.state, 1 - self.player_color)
@@ -151,7 +151,7 @@ class ReversiEnv(gym.Env):
                 else:
                     raise error.Error('Unsupported illegal place action: {}'.format(self.illegal_place_mode))
             else:
-                ReversiEnv.make_place(self.state, a, 1 - self.player_color)
+                self.state = ReversiEnv.make_place(self.state, a, 1 - self.player_color)
 
 
         self.possible_actions = ReversiEnv.get_possible_actions(self.state, self.player_color)
@@ -278,11 +278,9 @@ class ReversiEnv(gym.Env):
         pos_y = coords[0]
         pos_x = coords[1]
 
-        #TODO: Have Rust do the mutation? should this func mutate and return? kinda odd
         rust_board = rust_reversi.place_tile(pos_x, pos_y, player_color+1, ReversiEnv.to_rust_board(board))
         new_board = ReversiEnv.from_rust_board(np.array(rust_board))
-        board[new_board>-9] = new_board[new_board>-9]
-        return board
+        return new_board
 
 
     @staticmethod
@@ -336,8 +334,7 @@ def minimax(state, player_color):
     best_val = float("-inf")
     best_move = None
     for move in moves:
-        new_state = ReversiEnv.make_place(
-            np.copy(state), move, player_color)
+        new_state = ReversiEnv.make_place(state, move, player_color)
         move_val = minimax_value(
             new_state, 1-player_color, 3, float("-inf"), float("inf"))
         if move_val > best_val:
